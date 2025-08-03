@@ -31,6 +31,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Menees.Threading.Tests", "tests\Menees.Threading.Tests\Menees.Threading.Tests.csproj", "{944A63A7-5D3B-497F-9669-939184AE93FF}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "eng", "eng", "{7525B257-249C-EE79-B10A-65D0BC27ABA9}"
+	ProjectSection(SolutionItems) = preProject
+		eng\build.ps1 = eng\build.ps1
+		.github\workflows\ubuntu.yml = .github\workflows\ubuntu.yml
+		.github\workflows\windows.yml = .github\workflows\windows.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
