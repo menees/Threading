@@ -1,0 +1,7 @@
+{
+	"sdk": {
+		// DOTNET_VERSION: Make sure the SDK is up-to-date.
+		"version": "9.0.100",
+		"rollForward": "latestFeature"
+	}
+}

@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	  <TargetFrameworks>$(MeneesTargetNetFramework);$(MeneesTargetNetCore)</TargetFrameworks>
+	  <RootNamespace>Menees.Threading</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Menees.Threading\Menees.Threading.csproj" />
+  </ItemGroup>
+
+</Project>

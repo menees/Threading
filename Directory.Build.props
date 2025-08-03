@@ -1,0 +1,99 @@
+<Project>
+	<ImportGroup>
+		<Import Project="Directory.Version.props" />
+	</ImportGroup>
+
+	<PropertyGroup>
+		<NeutralLanguage>en-US</NeutralLanguage>
+		<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+		<Authors>Bill Menees</Authors>
+		<PackageProjectUrl>http://www.menees.com</PackageProjectUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/menees/Tasks</RepositoryUrl>
+		<GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+		<LangVersion>latest</LangVersion>
+		<StartYear>2025</StartYear>
+		<CurrentYear>$([System.DateTime]::UtcNow.ToString(`yyyy`))</CurrentYear>
+		<Copyright>Copyright © $(StartYear)-$(CurrentYear) Bill Menees</Copyright>
+		<Copyright Condition="$(CurrentYear) == '$(StartYear)'">Copyright © $(StartYear) Bill Menees</Copyright>
+
+		<!-- DOTNET_VERSION: Set framework and core versions for libraries. Set core version for Blazor. Update README.md. -->
+		<!-- We'll support older LTS releases for library builds. We'll use the latest STS release for web builds. -->
+		<MeneesTargetNetFramework>net48</MeneesTargetNetFramework>
+		<MeneesTargetNetCore>net6.0</MeneesTargetNetCore>
+
+		<RepoSrcFolder>$(MSBuildThisFileDirectory)src</RepoSrcFolder>
+		<UseCustomCodeAnalyzers>true</UseCustomCodeAnalyzers>
+		<Nullable>enable</Nullable>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+		<_SkipUpgradeNetAnalyzersNuGetWarning>true</_SkipUpgradeNetAnalyzersNuGetWarning>
+		<IsPublishable>false</IsPublishable>
+
+		<UseLocaMeneesLibraries>false</UseLocaMeneesLibraries>
+		<LocaMeneesLibrariesSrc/>
+		<BuildingInsideVisualStudio Condition="'$(BuildingInsideVisualStudio)' == ''">false</BuildingInsideVisualStudio>
+		<IsUnitTestProject>false</IsUnitTestProject>
+		<IsTestProject>false</IsTestProject>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+		<DefineConstants>DEBUG;TRACE</DefineConstants>
+		<CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+
+		<!-- Only set the BuildTime's date in Debug builds, so it doesn't force a rebuild every time.-->
+		<!-- https://stackoverflow.com/a/6656553/1882616 -->
+		<BuildTime Condition="'$(BuildTime)' == ''">$([System.DateTime]::UtcNow.ToString(`yyyy-MM-dd 00:00:00Z`))</BuildTime>
+
+		<!-- Make debug builds inside VS use local Libraries if available (instead of NuGet packages) to make debugging easier. -->
+		<!-- https://docs.microsoft.com/en-us/visualstudio/msbuild/visual-studio-integration-msbuild#build-solutions -->
+		<LocaMeneesLibrariesSrc>$(RepoSrcFolder)..\..\Libraries\src\</LocaMeneesLibrariesSrc>
+		<UseLocaMeneesLibraries Condition="$(BuildingInsideVisualStudio) and exists($(LocaMeneesLibrariesSrc))">true</UseLocaMeneesLibraries>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<DefineConstants>TRACE</DefineConstants>
+
+		<!-- Set the full BuildTime in Release builds. It will cause a rebuild, but the AssemblyMetadata will be correct. -->
+		<BuildTime Condition="'$(BuildTime)' == ''">$([System.DateTime]::UtcNow.ToString(`yyyy-MM-dd HH:mm:ssZ`))</BuildTime>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<AssemblyMetadata Condition="'$(BuildTime)' != ''" Include="BuildTime" Value="$(BuildTime)" />
+		<AssemblyMetadata Include="ProductUrl" Value="$(PackageProjectUrl)" />
+	</ItemGroup>
+
+	<ItemGroup Condition="$(UseCustomCodeAnalyzers)">
+		<PackageReference Include="codecracker.CSharp">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Menees.Analyzers">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers">
+			<!-- DOTNET_VERSION: NetAnalyzers version should match the Blazor version. -->
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="StyleCop.Analyzers">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Meziantou.Polyfill">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="System"/>
+		<Using Include="System.Collections.Generic"/>
+		<Using Include="System.Linq"/>
+	</ItemGroup>
+</Project>
