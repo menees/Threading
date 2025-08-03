@@ -9,8 +9,6 @@
 		<PackageVersion Include="Meziantou.Polyfill" Version="1.0.49" />
 		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="9.0.0" />
 		<PackageVersion Include="Shouldly" Version="4.3.0" />
-		<PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
-		<PackageVersion Include="codecracker.CSharp" Version="1.1.0" />
 		<PackageVersion Include="coverlet.collector" Version="6.0.4" />
 	</ItemGroup>
 </Project>

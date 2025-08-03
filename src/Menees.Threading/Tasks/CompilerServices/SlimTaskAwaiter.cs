@@ -1,8 +1,8 @@
-namespace Menees.Threading.Tasks.CompilerServices;
-
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+
+namespace Menees.Threading.Tasks.CompilerServices;
 
 /// <summary>Provides an awaiter for a <see cref="SlimTask{TResult}"/>.</summary>
 /// <remarks>This will never capture the current context. If you need to force a SlimTask
@@ -16,30 +16,30 @@ public readonly struct SlimTaskAwaiter<TResult> : ICriticalNotifyCompletion
 	private const bool DoNotContinueOnCapturedContext = false;
 
 	/// <summary>The value being awaited.</summary>
-	private readonly SlimTask<TResult> value;
+	private readonly SlimTask<TResult> _value;
 
 	/// <summary>Initializes the awaiter.</summary>
 	/// <param name="value">The value to be awaited.</param>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal SlimTaskAwaiter(in SlimTask<TResult> value) => this.value = value;
+	internal SlimTaskAwaiter(in SlimTask<TResult> value) => _value = value;
 
 	/// <summary>Gets whether the <see cref="SlimTask{TResult}"/> has completed.</summary>
 	public bool IsCompleted
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => this.value.IsCompleted;
+		get => _value.IsCompleted;
 	}
 
 	/// <summary>Gets the result of the SlimTask.</summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	[StackTraceHidden]
-	public TResult GetResult() => this.value.Result;
+	public TResult GetResult() => _value.Result;
 
 	/// <summary>Schedules the continuation action for this SlimTask.</summary>
 	public void OnCompleted(Action continuation)
-		=> this.value.AsTask().ConfigureAwait(DoNotContinueOnCapturedContext).GetAwaiter().OnCompleted(continuation);
+		=> _value.AsTask().ConfigureAwait(DoNotContinueOnCapturedContext).GetAwaiter().OnCompleted(continuation);
 
 	/// <summary>Schedules the continuation action for this SlimTask.</summary>
 	public void UnsafeOnCompleted(Action continuation)
-		=> this.value.AsTask().ConfigureAwait(DoNotContinueOnCapturedContext).GetAwaiter().UnsafeOnCompleted(continuation);
+		=> _value.AsTask().ConfigureAwait(DoNotContinueOnCapturedContext).GetAwaiter().UnsafeOnCompleted(continuation);
 }

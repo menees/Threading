@@ -1,8 +1,8 @@
-﻿namespace Menees.Threading.Tasks.CompilerServices;
-
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+
+namespace Menees.Threading.Tasks.CompilerServices;
 
 /// <summary>Provides a configurable awaiter for a <see cref="ConfiguredSlimTaskAwaitable{TResult}"/>.</summary>
 /// <remarks>Note: The similar <see cref="SlimTaskAwaiter{TResult}"/> is not configurable and never captures the context.</remarks>
@@ -10,10 +10,10 @@ using System.Runtime.InteropServices;
 public readonly struct ConfiguredSlimTaskAwaiter<TResult> : ICriticalNotifyCompletion
 {
 	/// <summary>The value being awaited.</summary>
-	private readonly SlimTask<TResult> value;
+	private readonly SlimTask<TResult> _value;
 
 	/// <summary>The value to pass to ConfigureAwait.</summary>
-	private readonly bool continueOnCapturedContext;
+	private readonly bool _continueOnCapturedContext;
 
 	/// <summary>Initializes the awaiter.</summary>
 	/// <param name="value">The value to be awaited.</param>
@@ -21,27 +21,27 @@ public readonly struct ConfiguredSlimTaskAwaiter<TResult> : ICriticalNotifyCompl
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal ConfiguredSlimTaskAwaiter(in SlimTask<TResult> value, bool continueOnCapturedContext)
 	{
-		this.value = value;
-		this.continueOnCapturedContext = continueOnCapturedContext;
+		_value = value;
+		_continueOnCapturedContext = continueOnCapturedContext;
 	}
 
 	/// <summary>Gets whether the <see cref="ConfiguredSlimTaskAwaitable{TResult}"/> has completed.</summary>
 	public bool IsCompleted
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => this.value.IsCompleted;
+		get => _value.IsCompleted;
 	}
 
 	/// <summary>Gets the result of the SlimTask.</summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	[StackTraceHidden]
-	public TResult GetResult() => this.value.Result;
+	public TResult GetResult() => _value.Result;
 
 	/// <summary>Schedules the continuation action for the <see cref="ConfiguredSlimTaskAwaitable{TResult}"/>.</summary>
 	public void OnCompleted(Action continuation)
-		=> this.value.AsTask().ConfigureAwait(this.continueOnCapturedContext).GetAwaiter().OnCompleted(continuation);
+		=> _value.AsTask().ConfigureAwait(_continueOnCapturedContext).GetAwaiter().OnCompleted(continuation);
 
 	/// <summary>Schedules the continuation action for the <see cref="ConfiguredSlimTaskAwaitable{TResult}"/>.</summary>
 	public void UnsafeOnCompleted(Action continuation)
-		=> this.value.AsTask().ConfigureAwait(this.continueOnCapturedContext).GetAwaiter().UnsafeOnCompleted(continuation);
+		=> _value.AsTask().ConfigureAwait(_continueOnCapturedContext).GetAwaiter().UnsafeOnCompleted(continuation);
 }

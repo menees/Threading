@@ -1,11 +1,11 @@
-namespace Menees.Threading.Tasks;
-
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Menees.Threading.Tasks.CompilerServices;
+
+namespace Menees.Threading.Tasks;
 
 /// <summary>
 /// Provides a slim task-like value type that wraps a <see cref="Task{TResult}"/> and a <typeparamref name="TResult"/>,
@@ -31,10 +31,10 @@ using Menees.Threading.Tasks.CompilerServices;
 public readonly struct SlimTask<TResult> : IEquatable<SlimTask<TResult>>
 {
 	/// <summary>The result to be used if the operation completed successfully synchronously.</summary>
-	private readonly TResult? result;
+	private readonly TResult? _result;
 
-	/// <summary>null if <see cref="result"/> has the result, otherwise a <see cref="Task{TResult}"/>.</summary>
-	private readonly Task<TResult>? task;
+	/// <summary>null if <see cref="_result"/> has the result, otherwise a <see cref="Task{TResult}"/>.</summary>
+	private readonly Task<TResult>? _task;
 
 	// An instance created with the default ctor (a zero init'd struct) represents a synchronously, successfully
 	// completed operation with a result of default(TResult).
@@ -44,8 +44,8 @@ public readonly struct SlimTask<TResult> : IEquatable<SlimTask<TResult>>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public SlimTask(TResult result)
 	{
-		this.result = result;
-		this.task = null;
+		_result = result;
+		_task = null;
 	}
 
 	/// <summary>Initialize the <see cref="SlimTask{TResult}"/> with a <see cref="Task{TResult}"/> that represents the operation.</summary>
@@ -53,8 +53,8 @@ public readonly struct SlimTask<TResult> : IEquatable<SlimTask<TResult>>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public SlimTask(Task<TResult> task)
 	{
-		this.task = task ?? throw new ArgumentNullException(nameof(task));
-		this.result = default;
+		_task = task ?? throw new ArgumentNullException(nameof(task));
+		_result = default;
 	}
 
 	/// <summary>Gets whether the <see cref="SlimTask{TResult}"/> represents a canceled operation.</summary>
@@ -63,36 +63,36 @@ public readonly struct SlimTask<TResult> : IEquatable<SlimTask<TResult>>
 	/// If it's backed by a <see cref="Task"/>, it'll return the value of the task's <see cref="Task.IsCanceled"/> property.
 	/// </remarks>
 	public bool IsCanceled
-		=> this.task != null && this.task.IsCanceled;
+		=> _task != null && _task.IsCanceled;
 
 	/// <summary>Gets whether the <see cref="SlimTask{TResult}"/> represents a completed operation.</summary>
 	public bool IsCompleted
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => this.task == null || this.task.IsCompleted;
+		get => _task == null || _task.IsCompleted;
 	}
 
 	/// <summary>Gets whether the <see cref="SlimTask{TResult}"/> represents a successfully completed operation.</summary>
 	public bool IsCompletedSuccessfully
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => this.task == null ||
+		get => _task == null ||
 #if NET
-		this.task.IsCompletedSuccessfully;
+		_task.IsCompletedSuccessfully;
 #else
-		this.task.Status == TaskStatus.RanToCompletion;
+		_task.Status == TaskStatus.RanToCompletion;
 #endif
 	}
 
 	/// <summary>Gets whether the <see cref="SlimTask{TResult}"/> represents a failed operation.</summary>
 	public bool IsFaulted
-		=> this.task != null && this.task.IsFaulted;
+		=> _task != null && _task.IsFaulted;
 
 	/// <summary>Gets the result.</summary>
 	public TResult Result
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => this.task == null ? this.result! : this.task.GetAwaiter().GetResult();
+		get => _task == null ? _result! : _task.GetAwaiter().GetResult();
 	}
 
 	/// <summary>Returns a value indicating whether two <see cref="SlimTask{TResult}"/> values are equal.</summary>
@@ -105,12 +105,12 @@ public readonly struct SlimTask<TResult> : IEquatable<SlimTask<TResult>>
 
 	/// <summary>Returns a value indicating whether this value is equal to a specified <see cref="object"/>.</summary>
 	public override bool Equals([NotNullWhen(true)] object? obj)
-		=> obj is SlimTask<TResult> task && this.Equals(task);
+		=> obj is SlimTask<TResult> task && Equals(task);
 
 	/// <summary>Returns the hash code for this instance.</summary>
 	public override int GetHashCode() =>
-		this.task != null ? this.task.GetHashCode() :
-		this.result != null ? this.result.GetHashCode() :
+		_task != null ? _task.GetHashCode() :
+		_result != null ? _result.GetHashCode() :
 		0;
 
 	/// <summary>Gets a string-representation of this <see cref="SlimTask{TResult}"/>.</summary>
@@ -118,9 +118,9 @@ public readonly struct SlimTask<TResult> : IEquatable<SlimTask<TResult>>
 	{
 		string? text = string.Empty;
 
-		if (this.IsCompletedSuccessfully)
+		if (IsCompletedSuccessfully)
 		{
-			TResult result = this.Result;
+			TResult result = Result;
 			if (result != null)
 			{
 				text = result.ToString();
@@ -137,14 +137,13 @@ public readonly struct SlimTask<TResult> : IEquatable<SlimTask<TResult>>
 	/// It will either return the wrapped task object if one exists, or it'll
 	/// manufacture a new task object to represent the result.
 	/// </remarks>
-#pragma warning disable CC0061 // Asynchronous method can be terminated with the 'Async' keyword. Like ValueTask's AsTask().
 	public Task<TResult> AsTask()
-#pragma warning restore CC0061 // Asynchronous method can be terminated with the 'Async' keyword.
 	{
 		// Return the task if we were constructed from one, otherwise manufacture one.  We don't
 		// cache the generated task into _task as it would end up changing both equality comparison
 		// and the hash code we generate in GetHashCode.
-		return this.task ?? Task.FromResult(this.result!);
+		return _task
+			?? Task.FromResult(_result!);
 	}
 
 	/// <summary>Configures an awaiter for this <see cref="SlimTask{TResult}"/>.</summary>
@@ -157,9 +156,9 @@ public readonly struct SlimTask<TResult> : IEquatable<SlimTask<TResult>>
 
 	/// <summary>Returns a value indicating whether this value is equal to a specified <see cref="SlimTask{TResult}"/> value.</summary>
 	public bool Equals(SlimTask<TResult> other) =>
-		this.task != null || other.task != null ?
-			this.task == other.task :
-			EqualityComparer<TResult>.Default.Equals(this.result!, other.result!);
+		_task != null || other._task != null ?
+			_task == other._task :
+			EqualityComparer<TResult>.Default.Equals(_result!, other._result!);
 
 	/// <summary>Gets an awaiter for this <see cref="SlimTask{TResult}"/>.</summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

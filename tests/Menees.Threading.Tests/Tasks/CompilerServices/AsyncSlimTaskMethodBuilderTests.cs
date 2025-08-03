@@ -1,7 +1,7 @@
-namespace Menees.Threading.Tasks.CompilerServices;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+
+namespace Menees.Threading.Tasks.CompilerServices;
 
 [TestClass]
 public class AsyncSlimTaskMethodBuilderTests
@@ -9,7 +9,7 @@ public class AsyncSlimTaskMethodBuilderTests
 	[TestMethod]
 	public void AsyncSlimTaskMethodBuilder_Create_Works()
 	{
-		var builder = AsyncSlimTaskMethodBuilder<int>.Create();
+		AsyncSlimTaskMethodBuilder<int> builder = AsyncSlimTaskMethodBuilder<int>.Create();
 		builder.ShouldBeOfType<AsyncSlimTaskMethodBuilder<int>>();
 	}
 }

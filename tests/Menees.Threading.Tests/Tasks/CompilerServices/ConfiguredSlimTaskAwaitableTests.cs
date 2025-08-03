@@ -1,7 +1,7 @@
-namespace Menees.Threading.Tasks.CompilerServices;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+
+namespace Menees.Threading.Tasks.CompilerServices;
 
 [TestClass]
 public class ConfiguredSlimTaskAwaitableTests
@@ -9,9 +9,9 @@ public class ConfiguredSlimTaskAwaitableTests
 	[TestMethod]
 	public void ConfiguredSlimTaskAwaitable_GetAwaiter_Works()
 	{
-		var task = new SlimTask<int>(10);
-		var awaitable = new ConfiguredSlimTaskAwaitable<int>(task, true);
-		var awaiter = awaitable.GetAwaiter();
+		SlimTask<int> task = new(10);
+		ConfiguredSlimTaskAwaitable<int> awaitable = new(task, true);
+		ConfiguredSlimTaskAwaiter<int> awaiter = awaitable.GetAwaiter();
 		awaiter.IsCompleted.ShouldBeTrue();
 		awaiter.GetResult().ShouldBe(10);
 	}
