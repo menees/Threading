@@ -108,8 +108,8 @@ public readonly struct SlimTask<TResult> : IEquatable<SlimTask<TResult>>
 		=> obj is SlimTask<TResult> task && Equals(task);
 
 	/// <summary>Returns the hash code for this instance.</summary>
-	public override int GetHashCode() =>
-		_task != null ? _task.GetHashCode() :
+	public override int GetHashCode()
+		=> _task != null ? _task.GetHashCode() :
 		_result != null ? _result.GetHashCode() :
 		0;
 
@@ -155,12 +155,13 @@ public readonly struct SlimTask<TResult> : IEquatable<SlimTask<TResult>>
 		=> new(this, continueOnCapturedContext);
 
 	/// <summary>Returns a value indicating whether this value is equal to a specified <see cref="SlimTask{TResult}"/> value.</summary>
-	public bool Equals(SlimTask<TResult> other) =>
-		_task != null || other._task != null ?
+	public bool Equals(SlimTask<TResult> other)
+		=> _task != null || other._task != null ?
 			_task == other._task :
 			EqualityComparer<TResult>.Default.Equals(_result!, other._result!);
 
 	/// <summary>Gets an awaiter for this <see cref="SlimTask{TResult}"/>.</summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public SlimTaskAwaiter<TResult> GetAwaiter() => new(in this);
+	public SlimTaskAwaiter<TResult> GetAwaiter()
+		=> new(in this);
 }

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -52,5 +53,13 @@ public class SlimTaskTests
 	{
 		SlimTask<int> task = new(123);
 		task.ToString().ShouldBe("123");
+
+		task = new SlimTask<int>(Task.FromResult(321));
+		task.ToString().ShouldBe("321");
+
+		TaskCompletionSource<int> tcs = new();
+		tcs.TrySetCanceled();
+		task = new SlimTask<int>(tcs.Task);
+		task.ToString().ShouldBeEmpty();
 	}
 }
