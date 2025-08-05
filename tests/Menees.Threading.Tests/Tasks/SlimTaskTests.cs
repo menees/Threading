@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -64,16 +65,74 @@ public class SlimTaskTests
 	}
 
 	[TestMethod]
-	public async Task SlimTask_Is_Awaitable()
+	public async Task SlimTask_Is_Awaitable_Synchronously()
+	{
+		string thought = await ThinkDeepThoughts(synchronous: true);
+		Debug.WriteLine(thought);
+	}
+
+	[TestMethod]
+	public async Task SlimTask_Is_Awaitable_Asynchronously()
 	{
 		string thought = await ThinkDeepThoughts();
 		Debug.WriteLine(thought);
+	}
 
-		static async SlimTask<string> ThinkDeepThoughts()
+	[TestMethod]
+	public async Task SlimTask_Does_Not_Capture_SynchronizationContext_Current_By_Default()
+	{
+		TestSynchronizationContext context = new(allowCapture: false);
+		using (context.BeginScope())
 		{
-			// await Task.Delay(100).ConfigureAwait(false);
-			await Task.CompletedTask;
-			return "Deep";
+			string thought = await ThinkDeepThoughts();
+			Debug.WriteLine(thought);
+			context.CallCount.ShouldBe(0);
 		}
+
+		context.CallCount.ShouldBe(0);
+	}
+
+	[TestMethod]
+	public async Task SlimTask_Does_Not_Capture_SynchronizationContext_Current_With_ConfigureAwait_False()
+	{
+		TestSynchronizationContext context = new(allowCapture: false);
+		using (context.BeginScope())
+		{
+			string thought = await ThinkDeepThoughts().ConfigureAwait(false);
+			Debug.WriteLine(thought);
+			context.CallCount.ShouldBe(0);
+		}
+
+		context.CallCount.ShouldBe(0);
+	}
+
+	[TestMethod]
+	public async Task SlimTask_Can_Capture_SynchronizationContext_Current_With_ConfigureAwait_True()
+	{
+		TestSynchronizationContext context = new(allowCapture: true);
+		using (context.BeginScope())
+		{
+			string thought = await ThinkDeepThoughts().ConfigureAwait(true);
+			Debug.WriteLine(thought);
+			context.CallCount.ShouldBe(1);
+		}
+
+		context.CallCount.ShouldBe(1);
+	}
+
+	// TODO: Add test that reads a BufferedStream one byte at a time, so its mostly synchronous. [Bill, 8/4/2025]
+
+	private static async SlimTask<string> ThinkDeepThoughts(bool synchronous = false)
+	{
+		if (synchronous)
+		{
+			await Task.CompletedTask;
+		}
+		else
+		{
+			await Task.Delay(10).ConfigureAwait(false);
+		}
+
+		return "Deep";
 	}
 }
