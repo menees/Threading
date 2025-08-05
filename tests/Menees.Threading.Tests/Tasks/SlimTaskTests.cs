@@ -62,4 +62,18 @@ public class SlimTaskTests
 		task = new SlimTask<int>(tcs.Task);
 		task.ToString().ShouldBeEmpty();
 	}
+
+	[TestMethod]
+	public async Task SlimTask_Is_Awaitable()
+	{
+		string thought = await ThinkDeepThoughts();
+		Debug.WriteLine(thought);
+
+		static async SlimTask<string> ThinkDeepThoughts()
+		{
+			// await Task.Delay(100).ConfigureAwait(false);
+			await Task.CompletedTask;
+			return "Deep";
+		}
+	}
 }
