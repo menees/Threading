@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -19,6 +18,11 @@ public struct AsyncSlimTaskMethodBuilder<TResult>
 	private static readonly Task<TResult> s_syncSuccessSentinel = System.Threading.Tasks.Task.FromResult(default(TResult)!);
 
 	/// <summary>
+	/// Used to start the state machine and generate a Task if we need one.
+	/// </summary>
+	private AsyncTaskMethodBuilder<TResult> _taskBuilder; // Mutable struct! Do not make it readonly!
+
+	/// <summary>
 	/// The wrapped task.  If the operation completed synchronously and successfully, this will be a sentinel object
 	/// compared by reference identity.</summary>
 	private Task<TResult>? _task;
@@ -29,14 +33,15 @@ public struct AsyncSlimTaskMethodBuilder<TResult>
 	/// </summary>
 	private TResult _result;
 
-	/// <summary>
-	/// Used to start the state machine and generate a Task if we need one.
-	/// </summary>
-	private AsyncTaskMethodBuilder<TResult> _taskBuilder;
+	private AsyncSlimTaskMethodBuilder(AsyncTaskMethodBuilder<TResult> taskBuilder)
+	{
+		_taskBuilder = taskBuilder;
+		_result = default!;
+	}
 
 	/// <summary>Creates a new instance with an assigned task builder.</summary>
 	public static AsyncSlimTaskMethodBuilder<TResult> Create()
-		=> new() { _taskBuilder = AsyncTaskMethodBuilder<TResult>.Create() };
+		=> new(AsyncTaskMethodBuilder<TResult>.Create());
 
 	/// <summary>Gets the SlimTask for this builder.</summary>
 	public SlimTask<TResult> Task
@@ -85,7 +90,7 @@ public struct AsyncSlimTaskMethodBuilder<TResult>
 	}
 
 	/// <summary>Marks the SlimTask as failed and binds the specified exception to the SlimTask.</summary>
-	public void SetException(Exception exception)
+	public readonly void SetException(Exception exception)
 		=> _taskBuilder.SetException(exception);
 
 	/// <summary>Marks the SlimTask as successfully completed.</summary>
@@ -103,11 +108,11 @@ public struct AsyncSlimTaskMethodBuilder<TResult>
 	}
 
 	/// <summary>Associates the builder with the specified state machine.</summary>
-	public void SetStateMachine(IAsyncStateMachine stateMachine)
+	public readonly void SetStateMachine(IAsyncStateMachine stateMachine)
 		=> _taskBuilder.SetStateMachine(stateMachine);
 
 	/// <summary>Begins running the builder with the associated state machine.</summary>
-	public void Start<TStateMachine>(ref TStateMachine stateMachine)
+	public readonly void Start<TStateMachine>(ref TStateMachine stateMachine)
 		where TStateMachine : IAsyncStateMachine
 		=> _taskBuilder.Start(ref stateMachine);
 }
