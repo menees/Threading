@@ -30,11 +30,12 @@ namespace Menees.Threading.Tasks;
 [StructLayout(LayoutKind.Auto)]
 public readonly struct SlimTask<TResult> : IEquatable<SlimTask<TResult>>
 {
-	/// <summary>The result to be used if the operation completed successfully synchronously.</summary>
-	private readonly TResult? _result;
-
 	/// <summary>null if <see cref="_result"/> has the result, otherwise a <see cref="Task{TResult}"/>.</summary>
-	private readonly Task<TResult>? _task;
+	/// <remarks>The task to be used if the operation completed asynchronously or if it completed synchronously but non-successfully.</remarks>
+	internal readonly Task<TResult>? _task;
+
+	/// <summary>The result to be used if the operation completed successfully synchronously.</summary>
+	internal readonly TResult? _result;
 
 	// An instance created with the default ctor (a zero init'd struct) represents a synchronously, successfully
 	// completed operation with a result of default(TResult).
@@ -44,8 +45,8 @@ public readonly struct SlimTask<TResult> : IEquatable<SlimTask<TResult>>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public SlimTask(TResult result)
 	{
-		_result = result;
 		_task = null;
+		_result = result;
 	}
 
 	/// <summary>Initialize the <see cref="SlimTask{TResult}"/> with a <see cref="Task{TResult}"/> that represents the operation.</summary>
@@ -164,4 +165,19 @@ public readonly struct SlimTask<TResult> : IEquatable<SlimTask<TResult>>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public SlimTaskAwaiter<TResult> GetAwaiter()
 		=> new(in this);
+
+	internal Task<TResult> AsTaskExpectNonNull() =>
+		// Return the task if we were constructed from one, otherwise manufacture one.
+		// Unlike AsTask(), this method is called only when we expect _task to be non-null,
+		// and thus we don't want GetTaskForResult inlined.
+		_task ?? GetTaskForResultNoInlining();
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private Task<TResult> GetTaskForResultNoInlining()
+	{
+		// Use AsyncTaskMethodBuilder to potentially get a cached task for common values, e.g., true, false, null, 0.
+		AsyncTaskMethodBuilder<TResult> builder = new();
+		builder.SetResult(_result!);
+		return builder.Task;
+	}
 }

@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Threading.Tasks;
 
 namespace Menees.Threading.Tasks.CompilerServices;
@@ -9,62 +10,37 @@ namespace Menees.Threading.Tasks.CompilerServices;
 [StructLayout(LayoutKind.Auto)]
 public struct AsyncSlimTaskMethodBuilder<TResult>
 {
-	/// <summary>Sentinel object used to indicate that the builder completed synchronously and successfully.</summary>
-	/// <remarks>
-	/// To avoid memory safety issues even in the face of invalid race conditions, we ensure that the type of this object
-	/// is valid for the mode in which we're operating.  As such, it's cached on the generic builder per TResult
-	/// rather than having one sentinel instance for all types.
-	/// </remarks>
-	private static readonly Task<TResult> s_syncSuccessSentinel = System.Threading.Tasks.Task.FromResult(default(TResult)!);
+	/// <summary>The <see cref="AsyncTaskMethodBuilder{TResult}"/> to which most operations are delegated.</summary>
+	private AsyncTaskMethodBuilder<TResult> _methodBuilder; // Mutable struct! Do not make it readonly!
 
-	/// <summary>
-	/// Used to start the state machine and generate a Task if we need one.
-	/// </summary>
-	private AsyncTaskMethodBuilder<TResult> _taskBuilder; // Mutable struct! Do not make it readonly!
-
-	/// <summary>
-	/// The wrapped task.  If the operation completed synchronously and successfully, this will be a sentinel object
-	/// compared by reference identity.</summary>
-	private Task<TResult>? _task;
-
-	/// <summary>
-	/// The result for this builder if it's completed synchronously, in which case <see cref="_task"/> will be
-	/// <see cref="s_syncSuccessSentinel"/>.
-	/// </summary>
+	/// <summary>The result for this builder, if it's completed before any awaits occur.</summary>
 	private TResult _result;
 
-	private AsyncSlimTaskMethodBuilder(AsyncTaskMethodBuilder<TResult> taskBuilder)
-	{
-		_taskBuilder = taskBuilder;
-		_result = default!;
-	}
+	/// <summary>true if <see cref="_result"/> contains the synchronous result for the async method; otherwise, false.</summary>
+	private bool _haveResult;
+
+	/// <summary>true if the builder should be used for setting/getting the result; otherwise, false.</summary>
+	private bool _useBuilder;
 
 	/// <summary>Creates a new instance with an assigned task builder.</summary>
 	public static AsyncSlimTaskMethodBuilder<TResult> Create()
-		=> new(AsyncTaskMethodBuilder<TResult>.Create());
+		=> new() { _methodBuilder = AsyncTaskMethodBuilder<TResult>.Create() };
 
-	/// <summary>Gets the SlimTask for this builder.</summary>
+	/// <summary>Gets the task for this builder.</summary>
 	public SlimTask<TResult> Task
 	{
 		get
 		{
 			SlimTask<TResult> slimTask;
 
-			if (_task == s_syncSuccessSentinel)
+			if (_haveResult)
 			{
 				slimTask = new SlimTask<TResult>(_result);
 			}
 			else
 			{
-				// With normal access patterns, _task should always be non-null here: the async method should have
-				// either completed synchronously, in which case SetResult would have set _task to a non-null object,
-				// or it should be completing asynchronously, in which case AwaitUnsafeOnCompleted would have similarly
-				// initialized _task to a state machine object. However, if the type is used manually (not via
-				// compiler-generated code) and accesses Task directly, we force it to be initialized.  Things will then
-				// "work" but in a degraded mode, as we don't know the TStateMachine type here, and thus we use a
-				// normal task object instead.
-				Task<TResult>? task = _task ??= _taskBuilder.Task;
-				slimTask = new SlimTask<TResult>(task);
+				_useBuilder = true;
+				slimTask = new SlimTask<TResult>(_methodBuilder.Task);
 			}
 
 			return slimTask;
@@ -72,47 +48,60 @@ public struct AsyncSlimTaskMethodBuilder<TResult>
 	}
 
 	/// <summary>Schedules the state machine to proceed to the next action when the specified awaiter completes.</summary>
+	/// <typeparam name="TAwaiter">The type of the awaiter.</typeparam>
+	/// <typeparam name="TStateMachine">The type of the state machine.</typeparam>
+	/// <param name="awaiter">the awaiter</param>
+	/// <param name="stateMachine">The state machine.</param>
 	public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
 		where TAwaiter : INotifyCompletion
 		where TStateMachine : IAsyncStateMachine
 	{
-		_taskBuilder.AwaitOnCompleted(ref awaiter, ref stateMachine);
-		_task = _taskBuilder.Task;
+		_useBuilder = true;
+		_methodBuilder.AwaitOnCompleted(ref awaiter, ref stateMachine);
 	}
 
 	/// <summary>Schedules the state machine to proceed to the next action when the specified awaiter completes.</summary>
+	/// <typeparam name="TAwaiter">The type of the awaiter.</typeparam>
+	/// <typeparam name="TStateMachine">The type of the state machine.</typeparam>
+	/// <param name="awaiter">the awaiter</param>
+	/// <param name="stateMachine">The state machine.</param>
+	[SecuritySafeCritical]
 	public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
 		where TAwaiter : ICriticalNotifyCompletion
 		where TStateMachine : IAsyncStateMachine
 	{
-		_taskBuilder.AwaitUnsafeOnCompleted(ref awaiter, ref stateMachine);
-		_task = _taskBuilder.Task;
+		_useBuilder = true;
+		_methodBuilder.AwaitUnsafeOnCompleted(ref awaiter, ref stateMachine);
 	}
 
-	/// <summary>Marks the SlimTask as failed and binds the specified exception to the SlimTask.</summary>
-	public readonly void SetException(Exception exception)
-		=> _taskBuilder.SetException(exception);
+	/// <summary>Marks the SlimTask as failed and binds the specified exception to it.</summary>
+	/// <param name="exception">The exception to bind to the task.</param>
+	public void SetException(Exception exception) => _methodBuilder.SetException(exception);
 
 	/// <summary>Marks the SlimTask as successfully completed.</summary>
+	/// <param name="result">The value to use to complete the task.</param>
 	public void SetResult(TResult result)
 	{
-		if (_task is null)
+		if (_useBuilder)
 		{
-			_result = result;
-			_task = s_syncSuccessSentinel;
+			_methodBuilder.SetResult(result);
 		}
 		else
 		{
-			_taskBuilder.SetResult(result);
+			_result = result;
+			_haveResult = true;
 		}
 	}
 
 	/// <summary>Associates the builder with the specified state machine.</summary>
-	public readonly void SetStateMachine(IAsyncStateMachine stateMachine)
-		=> _taskBuilder.SetStateMachine(stateMachine);
+	/// <param name="stateMachine">The state machine instance to associate with the builder.</param>
+	public void SetStateMachine(IAsyncStateMachine stateMachine)
+		=> _methodBuilder.SetStateMachine(stateMachine);
 
 	/// <summary>Begins running the builder with the associated state machine.</summary>
-	public readonly void Start<TStateMachine>(ref TStateMachine stateMachine)
+	/// <typeparam name="TStateMachine">The type of the state machine.</typeparam>
+	/// <param name="stateMachine">The state machine instance, passed by reference.</param>
+	public void Start<TStateMachine>(ref TStateMachine stateMachine)
 		where TStateMachine : IAsyncStateMachine
-		=> _taskBuilder.Start(ref stateMachine);
+		=> _methodBuilder.Start(ref stateMachine); // will provide the right ExecutionContext semantics
 }

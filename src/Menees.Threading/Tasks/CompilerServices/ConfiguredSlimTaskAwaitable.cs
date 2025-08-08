@@ -29,5 +29,6 @@ public readonly struct ConfiguredSlimTaskAwaitable<TResult>
 
 	/// <summary>Returns an awaiter for this <see cref="ConfiguredSlimTaskAwaitable{TResult}"/> instance.</summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public ConfiguredSlimTaskAwaiter<TResult> GetAwaiter() => new(in _value, _continueOnCapturedContext);
+	public ConfiguredSlimTaskAwaiter<TResult> GetAwaiter()
+		=> new(in _value, _continueOnCapturedContext);
 }
