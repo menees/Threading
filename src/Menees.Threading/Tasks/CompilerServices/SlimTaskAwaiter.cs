@@ -33,10 +33,8 @@ public readonly struct SlimTaskAwaiter<TResult> : ICriticalNotifyCompletion
 	/// <summary>Gets the result of the SlimTask.</summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	[StackTraceHidden]
-	public TResult GetResult() =>
-		_value._task == null
-		? _value._result!
-		: _value._task.GetAwaiter().GetResult();
+	public TResult GetResult()
+		=> _value.Result;
 
 	/// <summary>Schedules the continuation action for this SlimTask.</summary>
 	public void OnCompleted(Action continuation)

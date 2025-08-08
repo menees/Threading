@@ -32,10 +32,10 @@ public readonly struct SlimTask<TResult> : IEquatable<SlimTask<TResult>>
 {
 	/// <summary>null if <see cref="_result"/> has the result, otherwise a <see cref="Task{TResult}"/>.</summary>
 	/// <remarks>The task to be used if the operation completed asynchronously or if it completed synchronously but non-successfully.</remarks>
-	internal readonly Task<TResult>? _task;
+	private readonly Task<TResult>? _task;
 
 	/// <summary>The result to be used if the operation completed successfully synchronously.</summary>
-	internal readonly TResult? _result;
+	private readonly TResult? _result;
 
 	// An instance created with the default ctor (a zero init'd struct) represents a synchronously, successfully
 	// completed operation with a result of default(TResult).
@@ -97,12 +97,12 @@ public readonly struct SlimTask<TResult> : IEquatable<SlimTask<TResult>>
 	}
 
 	/// <summary>Returns a value indicating whether two <see cref="SlimTask{TResult}"/> values are equal.</summary>
-	public static bool operator ==(SlimTask<TResult> left, SlimTask<TResult> right) =>
-		left.Equals(right);
+	public static bool operator ==(SlimTask<TResult> left, SlimTask<TResult> right)
+		=> left.Equals(right);
 
 	/// <summary>Returns a value indicating whether two <see cref="SlimTask{TResult}"/> values are not equal.</summary>
-	public static bool operator !=(SlimTask<TResult> left, SlimTask<TResult> right) =>
-		!left.Equals(right);
+	public static bool operator !=(SlimTask<TResult> left, SlimTask<TResult> right)
+		=> !left.Equals(right);
 
 	/// <summary>Returns a value indicating whether this value is equal to a specified <see cref="object"/>.</summary>
 	public override bool Equals([NotNullWhen(true)] object? obj)
@@ -110,9 +110,7 @@ public readonly struct SlimTask<TResult> : IEquatable<SlimTask<TResult>>
 
 	/// <summary>Returns the hash code for this instance.</summary>
 	public override int GetHashCode()
-		=> _task != null ? _task.GetHashCode() :
-		_result != null ? _result.GetHashCode() :
-		0;
+		=> _task?.GetHashCode() ?? _result?.GetHashCode() ?? 0;
 
 	/// <summary>Gets a string-representation of this <see cref="SlimTask{TResult}"/>.</summary>
 	public override string? ToString()
@@ -157,9 +155,9 @@ public readonly struct SlimTask<TResult> : IEquatable<SlimTask<TResult>>
 
 	/// <summary>Returns a value indicating whether this value is equal to a specified <see cref="SlimTask{TResult}"/> value.</summary>
 	public bool Equals(SlimTask<TResult> other)
-		=> _task != null || other._task != null ?
-			_task == other._task :
-			EqualityComparer<TResult>.Default.Equals(_result!, other._result!);
+		=> _task != null || other._task != null
+			? _task == other._task
+			: EqualityComparer<TResult>.Default.Equals(_result!, other._result!);
 
 	/// <summary>Gets an awaiter for this <see cref="SlimTask{TResult}"/>.</summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

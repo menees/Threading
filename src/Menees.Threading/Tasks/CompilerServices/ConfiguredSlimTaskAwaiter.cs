@@ -36,9 +36,7 @@ public readonly struct ConfiguredSlimTaskAwaiter<TResult> : ICriticalNotifyCompl
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	[StackTraceHidden]
 	public TResult GetResult()
-		=> _value._task == null
-			? _value._result!
-			: _value._task.GetAwaiter().GetResult();
+		=> _value.Result;
 
 	/// <summary>Schedules the continuation action for the <see cref="ConfiguredSlimTaskAwaitable{TResult}"/>.</summary>
 	public void OnCompleted(Action continuation)
