@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 
 namespace Menees.Threading.Tasks.CompilerServices;
 
@@ -10,7 +9,7 @@ namespace Menees.Threading.Tasks.CompilerServices;
 /// to capture the context, then call <see cref="SlimTask{TResult}.ConfigureAwait(bool)"/>
 /// with a value of <see langword="true"/>.</remarks>
 [StructLayout(LayoutKind.Auto)]
-public readonly struct SlimTaskAwaiter<TResult> : ICriticalNotifyCompletion, ISlimTaskAwaiter
+public readonly struct SlimTaskAwaiter<TResult> : ICriticalNotifyCompletion
 {
 	// NOTE: This means we'll use "continueOnCapturedContext: false", which is the
 	// primary way SlimTask<TResult> differs from a non-pooled ValueTask<TResult>.
@@ -46,11 +45,4 @@ public readonly struct SlimTaskAwaiter<TResult> : ICriticalNotifyCompletion, ISl
 	/// <summary>Schedules the continuation action for this SlimTask.</summary>
 	public void UnsafeOnCompleted(Action continuation)
 		=> _value.AsTask().ConfigureAwait(DoNotContinueOnCapturedContext).GetAwaiter().UnsafeOnCompleted(continuation);
-
-	/// <summary>Gets the task underlying <see cref="_value"/>.</summary>
-	internal Task<TResult> AsTask() => _value.AsTask();
-
-	/// <summary>Gets the task underlying the incomplete <see cref="_value"/>.</summary>
-	/// <remarks>This method is used when awaiting and IsCompleted returned false; thus we expect the value task to be wrapping a non-null task.</remarks>
-	Task ISlimTaskAwaiter.GetTask() => _value.AsTaskExpectNonNull();
 }

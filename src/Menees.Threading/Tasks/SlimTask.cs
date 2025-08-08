@@ -165,19 +165,4 @@ public readonly struct SlimTask<TResult> : IEquatable<SlimTask<TResult>>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public SlimTaskAwaiter<TResult> GetAwaiter()
 		=> new(in this);
-
-	internal Task<TResult> AsTaskExpectNonNull() =>
-		// Return the task if we were constructed from one, otherwise manufacture one.
-		// Unlike AsTask(), this method is called only when we expect _task to be non-null,
-		// and thus we don't want GetTaskForResult inlined.
-		_task ?? GetTaskForResultNoInlining();
-
-	[MethodImpl(MethodImplOptions.NoInlining)]
-	private Task<TResult> GetTaskForResultNoInlining()
-	{
-		// Use AsyncTaskMethodBuilder to potentially get a cached task for common values, e.g., true, false, null, 0.
-		AsyncTaskMethodBuilder<TResult> builder = new();
-		builder.SetResult(_result!);
-		return builder.Task;
-	}
 }
