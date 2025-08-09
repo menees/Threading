@@ -120,7 +120,47 @@ public class SlimTaskTests
 		context.CallCount.ShouldBe(1);
 	}
 
-	// TODO: Add test that reads a BufferedStream one byte at a time, so its mostly synchronous. [Bill, 8/4/2025]
+	[TestMethod]
+	public async ValueTask SlimTask_Can_Be_Used_With_ValueTask()
+		=> await ThinkDeepThoughts();
+
+	[TestMethod]
+	public async Task SlimTask_Is_Useful_For_Mostly_Synchronous_Results()
+	{
+		const int RangeMax = 1000;
+		const int Modulus = 100;
+
+		int synchronousCompletions = 0;
+		foreach (int index in Enumerable.Range(0, RangeMax))
+		{
+			SlimTask<int> slimTask = GetValueAsync(index);
+			if (slimTask.IsCompletedSuccessfully)
+			{
+				synchronousCompletions++;
+			}
+
+			int value = await slimTask;
+			value.ShouldBe(index);
+
+			// SlimTask (unlike ValueTask) is safe to await multiple times
+			// since it doesn't support IValueTaskSource pooling.
+			(await slimTask).ShouldBe(index);
+			slimTask.Result.ShouldBe(index);
+		}
+
+		synchronousCompletions.ShouldBe(RangeMax - RangeMax / Modulus);
+
+		static async SlimTask<int> GetValueAsync(int value)
+		{
+			int result = value;
+			if (result % Modulus == 0)
+			{
+				await Task.Delay(1).ConfigureAwait(false);
+			}
+
+			return result;
+		}
+	}
 
 	private static async SlimTask<string> ThinkDeepThoughts(bool synchronous = false)
 	{
@@ -130,7 +170,7 @@ public class SlimTaskTests
 		}
 		else
 		{
-			await Task.Delay(10).ConfigureAwait(false);
+			await Task.Delay(1).ConfigureAwait(false);
 		}
 
 		return "Deep";
