@@ -7,10 +7,10 @@
 		<NeutralLanguage>en-US</NeutralLanguage>
 		<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 		<Authors>Bill Menees</Authors>
-		<PackageProjectUrl>http://www.menees.com</PackageProjectUrl>
+		<PackageProjectUrl>https://github.com/menees/Threading</PackageProjectUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<RepositoryType>git</RepositoryType>
-		<RepositoryUrl>https://github.com/menees/Tasks</RepositoryUrl>
+		<RepositoryUrl>https://github.com/menees/Threading</RepositoryUrl>
 		<GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
 		<LangVersion>latest</LangVersion>
 		<StartYear>2025</StartYear>
