@@ -4,11 +4,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageVersion Include="MSTest" Version="3.9.3" />
+		<PackageVersion Include="BenchmarkDotNet" Version="0.15.2" />
+		<PackageVersion Include="coverlet.collector" Version="6.0.4" />
 		<PackageVersion Include="Menees.Analyzers" Version="3.2.2" />
 		<PackageVersion Include="Meziantou.Polyfill" Version="1.0.49" />
 		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="9.0.0" />
+		<PackageVersion Include="MSTest" Version="3.9.3" />
 		<PackageVersion Include="Shouldly" Version="4.3.0" />
-		<PackageVersion Include="coverlet.collector" Version="6.0.4" />
 	</ItemGroup>
 </Project>

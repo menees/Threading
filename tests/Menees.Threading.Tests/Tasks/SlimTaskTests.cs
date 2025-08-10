@@ -148,7 +148,7 @@ public class SlimTaskTests
 			slimTask.Result.ShouldBe(index);
 		}
 
-		synchronousCompletions.ShouldBe(RangeMax - RangeMax / Modulus);
+		synchronousCompletions.ShouldBe(RangeMax - (RangeMax / Modulus));
 
 		static async SlimTask<int> GetValueAsync(int value)
 		{
